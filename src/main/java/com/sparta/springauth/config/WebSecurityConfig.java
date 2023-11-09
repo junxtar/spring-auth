@@ -1,7 +1,7 @@
 package com.sparta.springauth.config;
 
-import com.sparta.springauth.jwt.JwtAuthenticationFilter;
 import com.sparta.springauth.jwt.JwtAuthorizationFilter;
+import com.sparta.springauth.jwt.JwtAuthenticationFilter;
 import com.sparta.springauth.jwt.JwtUtil;
 import com.sparta.springauth.security.UserDetailsServiceImpl;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
+@EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig {
 
     private final JwtUtil jwtUtil;
@@ -69,10 +71,15 @@ public class WebSecurityConfig {
         );
 
         // 필터 관리
-        // 토큰이 있는지 먼저 확인 후 -> 없으면 login / 있으면 api
-        // 인가 Filter -> 인증 Filter -> UsernamePasswordAuthenticationFilter.class
         http.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        // 접근 불가 페이지
+        http.exceptionHandling((exceptionHandling) ->
+                exceptionHandling
+                        // "접근 불가" 페이지 URL 설정
+                        .accessDeniedPage("/forbidden.html")
+        );
 
         return http.build();
     }
